@@ -1,0 +1,198 @@
+package org.pro;
+
+import java.util.*;
+
+public class newATM {
+	public double balance;
+	public int oldPin;
+	public int newPin;
+	public Scanner scan=new Scanner(System.in);
+	public newATM() {
+
+		balance= 1000.00;
+		oldPin= 1234;
+
+	}
+	public void login() {
+		System.out.println("Enter your name ");
+		String name =scan.next();
+		System.out.println("Enter the Pin");
+		int enpin=scan.nextInt();
+		if(enpin==oldPin) {
+			System.out.println("Successfully login.." +name);
+			displayMenu();
+		}
+		else {
+			System.out.println("Pin number is Wrong Try Angain...");
+			login(); 
+		}
+	}
+	public void setPin() {
+		System.out.println("Enter your old PIN");
+		int oldPin1=scan.nextInt();
+		if(oldPin1==oldPin) {
+			System.out.println("Enter new PIN");
+			newPin=scan.nextInt();
+			if(oldPin!=newPin && isValidPin(newPin)) {
+				oldPin=newPin;
+				System.out.println("PIN changed successfully.."+oldPin);
+				login();
+			}else 
+			{
+				System.out.println("old pin new pin are same...New PIN must be 4 digits long.");
+				setPin();
+
+			}	
+
+		}
+		else {
+			System.out.println("inncorect your oldPin.... try angin");
+			setPin();
+		}
+
+	}
+	private boolean isValidPin(int newPin) {
+		return String.valueOf(newPin).length()==4;
+	}
+
+	public void start() {
+		System.out.println("welocome to the ATM");
+		login();
+	}
+
+
+	public void checkBalance() {
+		System.out.println("your balance " + balance);
+		int choice1 ;
+		if(true) {
+			System.out.println("1. Deposit");
+			System.out.println("2. Withdraw");
+			System.out.println("3. PIN change");
+			System.out.println("9. menu");
+			choice1=scan.nextInt();
+			switch(choice1) {
+			case 1:
+				deposit();
+				break;
+			case 2:
+				withdraw();
+			case 3:
+				setPin();
+				break;
+			case 9:
+				displayMenu();
+				break;
+			default:
+				System.out.println("Invalid choice..");
+			}
+
+		}
+
+	}
+
+	public void deposit() {
+		System.out.println("Enter deposit amount : ");
+		double amount= scan.nextDouble();
+		balance += amount;
+		System.out.println("Deposited  " + amount + " Successfully." );
+		int choice1 ;
+		if(true) {
+			System.out.println("1. check the balance");
+			System.out.println("2. Withdraw");
+			System.out.println("3. PIN change");
+			System.out.println("9. menu");
+			choice1=scan.nextInt();
+			switch(choice1) {
+			case 1:
+				checkBalance();
+				break;
+			case 2:
+				withdraw();
+			case 3:
+				setPin();
+				break;
+			case 9:
+				displayMenu();
+				break;
+			default:
+				System.out.println("Invalid choice..");
+			}
+
+		}
+
+	}
+
+	public void withdraw() {
+		System.out.println("Enter withdrawal amount:");
+		double amount= scan.nextDouble();
+		if(amount>balance) {
+			System.out.println("Insufficiant funds.");
+		}
+		else {
+			balance-=amount;
+			System.out.println("withdrow " + amount + "Successfully.");
+		}
+		int choice1 ;
+		if(true) {
+			System.out.println("1. check the balance");
+			System.out.println("2. deposit");
+			System.out.println("3. PIN change");
+			System.out.println("9. menu");
+			choice1=scan.nextInt();
+			switch(choice1) {
+			case 1:
+				checkBalance();
+				break;
+			case 2:
+				deposit();
+			case 3:
+				setPin();
+				break;
+			case 9:
+				displayMenu();
+				break;
+			default:
+				System.out.println("Invalid choice..");
+			}
+
+		}
+	}
+
+	public void displayMenu() {
+		int choice;
+		if(true)  {
+			System.out.println("ATM Menu");
+			System.out.println("1. Check balance");
+			System.out.println("2. Deposit");
+			System.out.println("3. Withdraw");
+			System.out.println("4. PIN change");
+			System.out.println("9. Exit");
+			choice=scan.nextInt();
+			switch(choice) {
+			case 1:
+				checkBalance();
+				break;
+			case 2:
+				deposit();
+				break;
+			case 3:
+				withdraw();
+				break;
+			case 4:
+				setPin();
+				break;
+			case 9:
+				System.out.println("Thanks using ATM..");
+				break;
+			default:
+				System.out.println("Invalid choice..");
+			}
+		}while(choice!=5);
+
+	}
+	public static void main(String[] args) {
+		newATM atm = new newATM();
+		atm.start();
+	}
+}
+
