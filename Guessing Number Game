@@ -1,0 +1,142 @@
+import java.util.*;
+import java.sql.*;
+import java.time.*;
+
+public class GuessingNumberGame {
+
+    private static Connection connection;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Initialize database
+        initDatabase();
+
+        System.out.println("Welcome to the Guessing Number Game!");
+
+        // Prompt user for name
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine();
+
+        // Start timer
+        long startTime = System.nanoTime();
+
+        // Generate a random 4-digit number with no repeated digits
+        String secretNumber = generateSecretNumber();
+        int moves = 0;
+
+        // Start the game loop
+        String guess = "";
+        while (!guess.equals(secretNumber)) {
+            System.out.print("Enter your guess (4 digits): ");
+            guess = scanner.nextLine();
+            moves++;
+
+            if (guess.length() != 4 || !guess.matches("\\d{4}")) {
+                System.out.println("Invalid input! Please enter exactly 4 digits.");
+                continue;
+            }
+
+            // Get feedback
+            String feedback = getFeedback(secretNumber, guess);
+            System.out.println("Feedback: " + feedback);
+        }
+
+        // Calculate elapsed time
+        long endTime = System.nanoTime();
+        double timeElapsed = (endTime - startTime) / 1_000_000_000.0;
+
+        System.out.println("Congratulations, " + name + "! You guessed the number in " + moves + " moves and took " + timeElapsed + " seconds.");
+
+        // Save result to the database
+        saveResult(name, moves, timeElapsed);
+
+        // Show best score
+        displayBestScore();
+
+        scanner.close();
+    }
+
+    // Initialize the SQLite database
+    private static void initDatabase() {
+        try {
+            connection = DriverManager.getConnection("jdbc:sqlite:game_results.db");
+            Statement stmt = connection.createStatement();
+            String createTableSQL = "CREATE TABLE IF NOT EXISTS results (" +
+                                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                                    "name TEXT NOT NULL," +
+                                    "moves INTEGER NOT NULL," +
+                                    "time REAL NOT NULL)";
+            stmt.execute(createTableSQL);
+        } catch (SQLException e) {
+            System.err.println("Error initializing database: " + e.getMessage());
+        }
+    }
+
+    // Generate a random 4-digit number with no repeated digits
+    private static String generateSecretNumber() {
+        Random random = new Random();
+        Set<Integer> digitsSet = new HashSet<>();
+        StringBuilder secretNumber = new StringBuilder();
+
+        while (secretNumber.length() < 4) {
+            int digit = random.nextInt(10); // Get digit between 0 and 9
+            if (!digitsSet.contains(digit)) {
+                digitsSet.add(digit);
+                secretNumber.append(digit);
+            }
+        }
+
+        return secretNumber.toString();
+    }
+
+    // Get feedback on the user's guess
+    private static String getFeedback(String secretNumber, String guess) {
+        StringBuilder feedback = new StringBuilder();
+
+        for (int i = 0; i < 4; i++) {
+            char guessedDigit = guess.charAt(i);
+            if (guessedDigit == secretNumber.charAt(i)) {
+                feedback.append("+");
+            } else if (secretNumber.indexOf(guessedDigit) != -1) {
+                feedback.append("-");
+            }
+        }
+
+        return feedback.toString();
+    }
+
+    // Save the result in the database
+    private static void saveResult(String name, int moves, double time) {
+        try {
+            String insertSQL = "INSERT INTO results (name, moves, time) VALUES (?, ?, ?)";
+            PreparedStatement pstmt = connection.prepareStatement(insertSQL);
+            pstmt.setString(1, name);
+            pstmt.setInt(2, moves);
+            pstmt.setDouble(3, time);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error saving result: " + e.getMessage());
+        }
+    }
+
+    // Display the best score from the database
+    private static void displayBestScore() {
+        try {
+            String querySQL = "SELECT name, moves, time FROM results ORDER BY (moves + time) LIMIT 1";
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(querySQL);
+
+            if (rs.next()) {
+                String name = rs.getString("name");
+                int moves = rs.getInt("moves");
+                double time = rs.getDouble("time");
+                System.out.println("Best score: " + name + " with " + moves + " moves and " + time + " seconds.");
+            } else {
+                System.out.println("No results available.");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error displaying best score: " + e.getMessage());
+        }
+    }
+}
